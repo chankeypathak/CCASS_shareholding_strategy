@@ -42,4 +42,4 @@ def get_data_for_date(ticker, data_date, output):
 
 
 if __name__ == "__main__":
-    app.run()
+    app.run('0.0.0.0', '5000')
