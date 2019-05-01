@@ -1,0 +1,44 @@
+<div class="col-md-12">
+  <div class="col-md-6">
+    <form #shForm="ngForm" (ngSubmit)="onSubmit()">
+      <div class="form-group">
+        <label for="stockName">Stock Name</label>
+        <input #stockName="ngModel" [(ngModel)]="stock.stockName" class="form-control"
+               id="stockName"
+               name="stockName" required
+               type="text">
+        <div [hidden]="stockName.valid || stockName.pristine"
+             class="alert alert-danger">
+          Stock name is required
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="stockStartDate">Start Date</label>
+        <input #stockStartDate="bsDatepicker" [(bsValue)]="stock.startDate"
+               bsDatepicker
+               class="form-control"
+               id="stockStartDate" type="text">
+        <div [hidden]="stockStartDate.valid || stockStartDate.pristine"
+             class="alert alert-danger">
+          Start Date is required
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="stockEndDate">End Date</label>
+        <input #stockEndDate="bsDatepicker" [(bsValue)]="stock.endDate"
+               bsDatepicker
+               class="form-control"
+               id="stockEndDate" type="text">
+        <div [hidden]="stockEndDate.valid || stockEndDate.pristine"
+             class="alert alert-danger">
+          End Date is required
+        </div>
+      </div>
+
+      <button [disabled]="!shForm.form.valid" class="btn btn-success" type="submit">Submit</button>
+    </form>
+  </div>
+  <div class="col-md-6"></div>
+</div>
