@@ -1,2 +1,17 @@
+.btn-success.disabled, .btn-success:disabled {
+    color: #fff;
+    background-color: grey;
+    border-color: black;
+}
 
+.margin-top-20px {
+  margin-top: 20px;
+}
 
+.float-left {
+  float: left;
+}
+
+.float-right {
+  float: right;
+}
