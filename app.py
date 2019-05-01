@@ -3,7 +3,7 @@ import io
 
 import requests
 from bs4 import BeautifulSoup
-from flask import Flask, request
+from flask import Flask, request, jsonify
 from flask_cors import CORS
 
 app = Flask(__name__)
@@ -19,11 +19,10 @@ def get_shareholding_data_for_stock_code():
         output = io.StringIO()
         get_data_for_date(request_data.get('stockName'), request_data.get('startDate'), output)
         get_data_for_date(request_data.get('stockName'), request_data.get('endDate'), output)
-        return output.getvalue()
+        return jsonify(output.getvalue())
 
 
 def get_data_for_date(ticker, data_date, output):
-    print("data_date", data_date)
     with requests.Session() as s:
         s.headers = {"User-Agent": "Mozilla/5.0"}
         res = s.get(URL)
