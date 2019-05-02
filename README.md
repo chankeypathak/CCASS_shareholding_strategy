@@ -1,4 +1,4 @@
-# CCASS_shareholding_strategy
+# CCASS Shareholding Strategy Helper
 
 ## Prerequisites
    - Angular
