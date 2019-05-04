@@ -47,6 +47,7 @@ export class AppComponent {
     if ((sDate != null && eDate != null) && (eDate) <= (sDate)) {
       this.error = 'End date should be greater than start date.';
       this.isValidDate = false;
+      this.spinner.hide();
     }
   }
 
