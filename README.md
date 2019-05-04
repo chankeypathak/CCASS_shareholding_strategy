@@ -21,7 +21,22 @@ $ python app.py
 
 ## Front-end
 
-Start angular app by executing 
+Run index.html from client/dist/client 
+
+
+
+## To modify UI
+
+Install below dependencies using npm
+
+   - dc
+   - d3
+   - moment
+   - crossfilter
+   - ngx-bootstrap
+   - ngx-spinner 
+
+make changes in client/ then run below to observe the same 
 
 ```bash
 ng-serve --open
