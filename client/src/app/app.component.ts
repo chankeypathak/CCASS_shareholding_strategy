@@ -2,8 +2,11 @@ import {Component} from "@angular/core";
 import {Stock} from "./models/stock";
 
 import {HttpService} from "./services/httpService/http.service";
+import { NgxSpinnerService } from 'ngx-spinner';
 import * as moment from "moment";
 import * as d3 from "d3";
+import * as dc from "dc";
+import * as crossfilter from "crossfilter2";
 
 @Component({
   selector: 'app-root',
@@ -20,22 +23,22 @@ export class AppComponent {
   isValidDate: boolean;
   error: string;
 
-  constructor(private http: HttpService) {
+  constructor(private http: HttpService, private spinner: NgxSpinnerService) {
     this.minDate = new Date('May 01, 2018 00:00:00');
     this.maxDate = new Date();
     this.maxDate.setDate(this.maxDate.getDate() - 1);
   }
 
   onSubmit() {
+    this.spinner.show();
     this.modifiedStock.stockName = this.stock.stockName;
     this.modifiedStock.startDate = moment(this.stock.startDate).format('YYYY/MM/DD');
     this.modifiedStock.endDate = moment(this.stock.endDate).format('YYYY/MM/DD');
 
     this.validateDates(this.modifiedStock.startDate, this.modifiedStock.endDate);
     if (!this.isValidDate) return;
-    this.http.postShareHoldingData(this.modifiedStock).subscribe((data: {}) => {
-      console.log(data)
-      this.createLineChart(data);
+    this.http.postShareHoldingData(this.modifiedStock).subscribe((response: {}) => {
+      this.createLineChart(response);
     })
   }
 
@@ -48,159 +51,73 @@ export class AppComponent {
   }
 
   createLineChart(rawData) {
+    // var data = [
+    //   {bank: "HSBC", date: "2019/04/01", percentage: "21.56"}, {bank: "HSBC", date: "2019/04/01", percentage: "21.56"},
+    //   {bank: "HSBC", date: "2019/04/01", percentage: "21.56"}, {bank: "HSBC", date: "2019/04/06", percentage: "21.56"},
+    //   {bank: "HSBC", date: "2019/04/20", percentage: "21.56"}, {bank: "HSBC", date: "2019/04/20", percentage: "21.56"},
+    //   {bank: "HSBC", date: "2019/04/20", percentage: "21.56"}, {bank: "HSBC", date: "2019/04/20", percentage: "21.56"},
+    //   {bank: "SC", date: "2019/04/06", percentage: "21.56"}, {bank: "SC", date: "2019/04/06", percentage: "22.56"},
+    //   {bank: "SC", date: "2019/04/01", percentage: "21.56"}, {bank: "SC", date: "2019/04/06", percentage: "22.56"}]
+
     var data = d3.csvParse(rawData);
 
-    var parseTime = d3.timeParse("%Y/%m/%d");
+    var chart = dc.seriesChart("#chart");
+    var ndx, runDimension, runGroup;
+    var parseDate = d3.timeParse("%Y/%m/%d");
+    var x = data.map(function (d) {
+      return d.date = parseDate(d.date);
+    });
+    var minDate = d3.min(d3.values(x));
+    var maxDate = d3.max(d3.values(x));
 
-    var data = [{
-      address: "HSBC WEALTH BUSINESS SERVICES 8/F TOWER 2 & 3 HSBC CENTRE 1 SHAM MONG ROAD KOWLOON",
-      date: "2019/05/01",
-      name_of_participant: "THE HONGKONG AND SHANGHAI BANKING",
-      percentage: "2%",
-      pid: "C00019",
-      shareholding: "819,360,131"
-    },
-    {
-      address: "HSBC WEALTH BUSINESS SERVICES 8/F TOWER 2 & 3 HSBC CENTRE 1 SHAM MONG ROAD KOWLOON",
-      date: "2019/05/02",
-      name_of_participant: "THE HONGKONG AND SHANGHAI BANKING",
-      percentage: "3%",
-      pid: "C00019",
-      shareholding: "819,360,131"
-    },
-    {
-      address: "HSBC WEALTH BUSINESS SERVICES 8/F TOWER 2 & 3 HSBC CENTRE 1 SHAM MONG ROAD KOWLOON",
-      date: "2019/05/04",
-      name_of_participant: "THE HONGKONG AND SHANGHAI BANKING",
-      percentage: "4%",
-      pid: "C00019",
-      shareholding: "819,360,131"
-    }]
+    data.forEach(function(x) {
+      x.percentage = x.percentage.replace('%', '');
+    })
 
-    console.log(data);
-    var width = 500;
-    var height = 300;
-    var margin = 50;
-    var duration = 250;
-
-    var lineOpacity = "0.25";
-    var lineOpacityHover = "0.85";
-    var otherLinesOpacityHover = "0.1";
-    var lineStroke = "1.5px";
-    var lineStrokeHover = "2.5px";
-
-    var circleOpacity = '0.85';
-    var circleOpacityOnLineHover = "0.25"
-    var circleRadius = 3;
-    var circleRadiusHover = 6;
-
-
-    /* Format Data */
-    data.forEach(function (d) {
-      d.date = parseTime(d.date);
-      d.percentage = d.percentage.replace('%', '');
+    ndx = crossfilter(data);
+    runDimension = ndx.dimension(function (d) {
+      return [d.bank, d.date];
+    });
+    runGroup = runDimension.group().reduceSum(function (d) {
+      return +d.percentage;
     });
 
-    /* Scale */
-    var xScale = d3.scaleTime()
-      .domain(d3.extent(data, function (d) {
-        return d.date;
-      }))
-      .range([0, width]);
+    var colors = ["#1b70fc", "#faff16", "#d50527", "#158940", "#f898fd", "#24c9d7", "#cb9b64", "#866888", "#22e67a", "#e509ae",
+      "#9dabfa", "#437e8a", "#b21bff", "#ff7b91", "#94aa05", "#ac5906", "#82a68d", "#fe6616", "#7a7352", "#f9bc0f", "#b65d66"];
 
-    var yScale = d3.scaleLinear()
-      .domain([0, d3.max(data, d => d.percentage)])
-      .range([height - margin, 0]);
-
-    var color = d3.scaleOrdinal(d3.schemeCategory10);
-
-    /* Add SVG */
-    var svg = d3.select("#chart").append("svg")
-      .attr("width", (width + margin) + "px")
-      .attr("height", (height + margin) + "px")
-      .append('g')
-      .attr("transform", `translate(${margin}, ${margin})`);
-
-
-    /* Add line into SVG */
-    var line = d3.line()
-      .x(d => xScale(d.date))
-      .y(d => yScale(d.percentage));
-
-    let lines = svg.append('g')
-      .attr('class', 'lines');
-
-    lines.selectAll('.line-group')
-      .data(data).enter()
-      .append('g')
-      .attr('class', 'line-group')
-      .append('path')
-      .attr('class', 'line')
-      .attr('d', d => line(d.percentage))
-      .style('stroke', (d, i) => color(i))
-      .style('opacity', lineOpacity);
-
-
-    /* Add circles in the line */
-    lines.selectAll("circle-group")
-      .data(data).enter()
-      .append("g")
-      .style("fill", (d, i) => color(i))
-      .selectAll("circle")
-      .data(d => d).enter()
-      .append("g")
-      .attr("class", "circle")
-      .on("mouseover", function (d) {
-        d3.select(this)
-          .style("cursor", "pointer")
-          .append("text")
-          .attr("class", "text")
-          .text(`${d.percentage}`)
-          .attr("x", d => xScale(d.date) + 5)
-          .attr("y", d => yScale(d.percentage) - 10);
+    chart
+      .width(1000)
+      .height(800)
+      .chart(function (c) {
+        return dc.lineChart(c).curve(d3.curveCardinal);
       })
-      .on("mouseout", function (d) {
-        d3.select(this)
-          .style("cursor", "none")
-          .transition()
-          .duration(duration)
-          .selectAll(".text").remove();
+      .x(d3.scaleTime().domain([minDate, maxDate]).range([100, 500]))
+      .brushOn(false)
+      .clipPadding(10)
+      .elasticY(true)
+      .dimension(runDimension)
+      .group(runGroup)
+      //.mouseZoomable(true)
+      .seriesAccessor(function (d) {
+        return d.key[0];
       })
-      .append("circle")
-      .attr("cx", d => xScale(d.date))
-      .attr("cy", d => yScale(d.percentage))
-      .attr("r", circleRadius)
-      .style('opacity', circleOpacity)
-      .on("mouseover", function (d) {
-        d3.select(this)
-          .transition()
-          .duration(duration)
-          .attr("r", circleRadiusHover);
+      .keyAccessor(function (d) {
+        return +d.key[1];
       })
-      .on("mouseout", function (d) {
-        d3.select(this)
-          .transition()
-          .duration(duration)
-          .attr("r", circleRadius);
-      });
+      .valueAccessor(function (d) {
+        return +d.value;
+      })
+      .ordinalColors(colors)
+      .title(function(d) {
+        return d.key[0] + ": " + d.value + "%";
+      })
+      .legend(dc.legend().x(800).y(30).itemHeight(13).gap(5).horizontal(1).legendWidth(140).itemWidth(70))
+      .xAxis()
+      .tickValues(data.map(function(d) { return new Date(d.date)}))
+      .tickFormat(d3.timeFormat("%Y/%m/%d"));
 
-
-    /* Add Axis into SVG */
-    var xAxis = d3.axisBottom(xScale).ticks(5);
-    var yAxis = d3.axisLeft(yScale).ticks(5);
-
-    svg.append("g")
-      .attr("class", "x axis")
-      .attr("transform", `translate(0, ${height - margin})`)
-      .call(xAxis);
-
-    svg.append("g")
-      .attr("class", "y axis")
-      .call(yAxis)
-      .append('text')
-      .attr("y", 15)
-      .attr("transform", "rotate(-90)")
-      .attr("fill", "#000")
-      .text("Total values");
+    dc.renderAll();
+    this.spinner.hide();
   }
 }
+

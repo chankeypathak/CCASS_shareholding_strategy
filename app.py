@@ -73,6 +73,7 @@ def get_data_for_date(ticker, data_date, output):
 
             # Skip data unrelated to mentioned banks, and only store date, bank_name, pid, percentage
             if data[0] in PID_BANK_MAPPING:
+                print([data_date, PID_BANK_MAPPING[data[0]], data[0], data[3], data[4]])
                 writer.writerow([data_date, PID_BANK_MAPPING[data[0]], data[0], data[4]])
 
 

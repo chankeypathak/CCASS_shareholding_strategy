@@ -36,3 +36,10 @@ svg {
 .title-text {
   font-size: 12px;
 }
+
+.custom-dropdown
+{
+    padding: 10px;
+    border: 1px solid lightgrey;
+    border-radius: 5px;
+}

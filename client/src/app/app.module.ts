@@ -5,6 +5,8 @@ import {HttpClientModule} from '@angular/common/http';
 import {AppRoutingModule} from './app-routing.module';
 import {AppComponent} from './app.component';
 import {BsDatepickerModule, DatepickerModule} from 'ngx-bootstrap/datepicker';
+import { BsDropdownModule } from 'ngx-bootstrap/dropdown'
+import { NgxSpinnerModule } from 'ngx-spinner';
 
 import {HttpService} from "./services/httpService/http.service";
 
@@ -18,7 +20,9 @@ import {HttpService} from "./services/httpService/http.service";
     FormsModule,
     BsDatepickerModule.forRoot(),
     DatepickerModule.forRoot(),
-    HttpClientModule
+    BsDropdownModule.forRoot(),
+    HttpClientModule,
+    NgxSpinnerModule
   ],
   providers: [HttpService],
   bootstrap: [AppComponent]

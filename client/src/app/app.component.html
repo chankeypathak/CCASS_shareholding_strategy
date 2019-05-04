@@ -57,9 +57,18 @@
   <div class="col-md-9 margin-top-20px float-right">
     <div class="card">
       <div class="card-body">
-        My graph goes here
         <div id="chart" class="margin-top-20px"></div>
       </div>
     </div>
+    <ngx-spinner
+      bdOpacity=0.9
+      bdColor="#333"
+      size="medium"
+      color="#fff"
+      type="ball-pulse"
+      [fullScreen]="true"
+    >
+      <p style="color: white">Fetching data from hkexnews... </p>
+    </ngx-spinner>
   </div>
 </div>
